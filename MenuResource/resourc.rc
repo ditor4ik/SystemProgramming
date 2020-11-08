@@ -1,0 +1,13 @@
+#include"menudemo.h"
+menudemo MENU
+{
+POPUP "Фон"{
+MENUITEM "Синий", MI_BLUE
+MENUITEM "Зеленый", MI_GREEN
+MENUITEM "Желтый", MI_YELLOW
+MENUITEM "Фиолетовый", MI_PURPLE
+MENUITEM SEPARATOR
+MENUITEM "Выход", MI_EXIT
+}
+
+}
