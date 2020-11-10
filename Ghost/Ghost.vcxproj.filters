@@ -24,17 +24,17 @@
     <ClInclude Include="Resource.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="Reflection.h">
+    <ClInclude Include="Ghost.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Reflection.cpp">
+    <ClCompile Include="Ghost.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="Reflection.rc">
+    <ResourceCompile Include="Ghost.rc">
       <Filter>Файлы ресурсов</Filter>
     </ResourceCompile>
   </ItemGroup>
@@ -42,7 +42,19 @@
     <Image Include="small.ico">
       <Filter>Файлы ресурсов</Filter>
     </Image>
-    <Image Include="Reflection.ico">
+    <Image Include="Ghost.ico">
+      <Filter>Файлы ресурсов</Filter>
+    </Image>
+    <Image Include="bob.bmp">
+      <Filter>Файлы ресурсов</Filter>
+    </Image>
+    <Image Include="steam.bmp">
+      <Filter>Файлы ресурсов</Filter>
+    </Image>
+    <Image Include="pizza.bmp">
+      <Filter>Файлы ресурсов</Filter>
+    </Image>
+    <Image Include="Stitch.bmp">
       <Filter>Файлы ресурсов</Filter>
     </Image>
   </ItemGroup>
