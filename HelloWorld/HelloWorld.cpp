@@ -1,17 +1,9 @@
-﻿#define _CRT_SECURE_NO_WARNINGS
-#include<Windows.h>
+﻿#include<Windows.h>
 #include<tchar.h>
-#include<xstring>
-typedef std::basic_string < TCHAR, std::char_traits<TCHAR>, std::allocator < TCHAR>> String;
-
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
-TCHAR WinName[] = _T("MainFrame");
-TCHAR r_str[] = _T("Нажата правая кнопка мыши");
-TCHAR l_str[] = _T("Нажата левая кнопка мыши");
-
-
+char SystemDirectory[MAX_PATH];
 //==================================================================================
-int WINAPI WinMain(HINSTANCE This, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
 	HWND hMainWnd;
 	TCHAR szClassName[] = _T("MyClass");
 	MSG msg;
@@ -22,7 +14,7 @@ int WINAPI WinMain(HINSTANCE This, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int
 	wc.lpfnWndProc = WndProc;
 	wc.cbClsExtra = 0;
 	wc.cbWndExtra = 0;
-	wc.hInstance = This;
+	wc.hInstance = hInstance;
 	wc.hIcon = LoadIcon(NULL, IDI_APPLICATION);
 	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
 	wc.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
@@ -35,8 +27,8 @@ int WINAPI WinMain(HINSTANCE This, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int
 		return 0;
 	}
 	//Создаем основное окно приложения
-	hMainWnd = CreateWindow(szClassName, _T("Massage"), WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL,
-		This, NULL);
+	hMainWnd = CreateWindow(szClassName, _T("A Hello1 Application"), WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL,
+		hInstance, NULL);
 
 	if (!hMainWnd) {
 		MessageBox(NULL, _T("Cannot create main window"), _T("Error"), MB_OK);
@@ -52,63 +44,31 @@ int WINAPI WinMain(HINSTANCE This, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int
 	}
 	return msg.wParam;
 	char path[100];
-}
-LRESULT CALLBACK WndProc(HWND hWnd, UINT massage, WPARAM wParam,
 
+
+
+}
+LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam,
 	LPARAM lParam) {
 	HDC hDC;
 	PAINTSTRUCT ps;
 	RECT rect;
-	int x, y;
-	static int t;
-	static String str;
-	TCHAR s[10], str1[20] = _T("Секунды: ");
-	switch (massage) {
-
-	case WM_CREATE:
-		SetTimer(hWnd, 1, 1000, NULL);
-		break;
-	case WM_TIMER:
-		t++;
-		InvalidateRect(hWnd, NULL, TRUE);
-		break;
-	case WM_RBUTTONDOWN:
-		x = LOWORD(lParam);
-		y = HIWORD(lParam);
-		hDC = GetDC(hWnd);
-		TextOut(hDC, x, y, r_str, _tcsclen(r_str));
-		ReleaseDC(hWnd, hDC);
-		break;
-	case WM_LBUTTONDOWN:
-		x = LOWORD(lParam);
-		y = HIWORD(lParam);
-		hDC = GetDC(hWnd);
-		TextOut(hDC, x, y, l_str, _tcsclen(l_str));
-		ReleaseDC(hWnd, hDC);
-		break;
-	case WM_RBUTTONUP:
-	case WM_LBUTTONUP:
-		InvalidateRect(hWnd, NULL, TRUE);
-		break;
-	case WM_CHAR:
-		str += (TCHAR)wParam;
-		InvalidateRect(hWnd, NULL, TRUE);
-		break;
+	switch (uMsg) {
 	case WM_PAINT:
 		hDC = BeginPaint(hWnd, &ps);
-		_tcscat(str1 + 9, _itot(t, s, 10));
-		TextOut(hDC, 0, 0, str1, _tcsclen(str1));
+		GetClientRect(hWnd, &rect);
+		DrawText(hDC, _T("Hello, World!"), -1, &rect,
+			DT_SINGLELINE | DT_CENTER | DT_VCENTER);
 		EndPaint(hWnd, &ps);
 		break;
 	case WM_CLOSE:
 		DestroyWindow(hWnd);
 		break;
 	case WM_DESTROY:
-		KillTimer(hWnd, 1);
 		PostQuitMessage(0);
 		break;
 	default:
-		return DefWindowProc(hWnd, massage, wParam, lParam);
+		return DefWindowProc(hWnd, uMsg, wParam, lParam);
 	}
 	return 0;
 
