@@ -2,7 +2,7 @@
 #include<tchar.h>
 #include "resource.h"
 
-
+HMENU menu;
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 TCHAR WinName[] = _T("MainFrame");
 HINSTANCE hInst;
@@ -41,6 +41,7 @@ int APIENTRY _tWinMain(HINSTANCE This, //Дескриптор текущего �
 		NULL,//Нет меню
 		This,//Дескриптор приложения
 		NULL);//Дополнительной информации нет
+	
 	ShowWindow(hWnd, mode);//Показать окно
 	//Цикл обработки сообщений
 	while (GetMessage(&msg, NULL, 0, 0))
@@ -51,86 +52,101 @@ int APIENTRY _tWinMain(HINSTANCE This, //Дескриптор текущего �
 	return 0;
 
 }
-
-
+const int SPAN = 10;
+#include <math.h>
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
+	
 	PAINTSTRUCT ps;
 	HDC hdc;
-	RECT rt;
-	int i, x, y, p, q;
-	static int k;
-	static bool Capture;
-	static POINT pts[3];
+	int mx, my;
+	static double mod, vx, vy, xt, yt;
 	static HDC memDC;
-	static HBITMAP hPicture;
-	static BITMAP bm;
-	static HPEN hPen;
+	static HPEN hpen;
+	static int x, y, cx, cy, scrx, scry;
+	static HBITMAP hCircle;
+	static bool play;
+	
 	switch (message)
 	{
 	case WM_CREATE:
-		hPicture = LoadBitmap(hInst, MAKEINTRESOURCE(IDB_BITMAP1));
-		GetObject(hPicture, sizeof(bm), &bm);
-		hPen = CreatePen(PS_SOLID, 4, RGB(0,0,255));
-		GetClientRect(hWnd, &rt);
-		x = (rt.right - bm.bmWidth) / 2;
-		y = (rt.bottom - bm.bmHeight) / 2;
-		pts[0].x = pts[2].x = x;
-		pts[0].y = pts[1].y = y;
-		pts[1].x = x + bm.bmWidth;
-		pts[2].y = y + bm.bmHeight;
+		hpen = CreatePen(PS_SOLID, 4, RGB(255, 0, 0));
+		hCircle = LoadBitmap(hInst, MAKEINTRESOURCE(IDB_SMALLBALL));;
 		hdc = GetDC(hWnd);
 		memDC = CreateCompatibleDC(hdc);
-		SelectObject(memDC, hPicture);
+		SelectObject(memDC, hCircle);
+		ReleaseDC(hWnd, hdc);
+		menu = LoadMenu(hInst, MAKEINTRESOURCE(IDC_MENU));
+		SetMenu(hWnd, menu);
+		break;
+	case WM_SIZE:
+		scrx = LOWORD(lParam);
+		scry = HIWORD(lParam);
+		x = (cx = scrx / 2) - 16;
+		y = (cy = scry / 2) - 16;
+		break;
+	case WM_LBUTTONDOWN:
+		if (!play)
+		{
+			mx = LOWORD(lParam);
+			my = HIWORD(lParam);
+			vx = mx - cx;
+			vy = my - cy;
+			mod = sqrt(vx * vx + vy * vy);
+			vx = vx / mod;
+			vy = vy / mod;
+			hdc = GetDC(hWnd);
+			SelectObject(hdc, hpen);
+			MoveToEx(hdc, cx, cy, 0);
+			LineTo(hdc, mx, my);
+			LineTo(hdc, mx - (vx - vy) * SPAN, my - (vy + vx) * SPAN);
+			MoveToEx(hdc, mx - (vx + vy) * SPAN, my - (vy - vx) * SPAN, 0);
+			LineTo(hdc, mx, my);
+			ReleaseDC(hWnd, hdc);
+			play = true;
+		}
+		break;
+	case WM_TIMER:
+		hdc = GetDC(hWnd);
+		BitBlt(hdc, x, y, 32, 32, NULL, 0, 0, PATCOPY);
+		if (x + 31 > scrx || x < 1) vx = -vx;
+		if (y + 31 > scry || y < 1) vy = -vy;
+		xt += vx * 10;
+		yt += vy * 10;
+		x = int(xt + 0.5);
+		y = int(yt + 0.5);
+		BitBlt(hdc, x, y, 32, 32, memDC, 0, 0, SRCCOPY);
 		ReleaseDC(hWnd, hdc);
 		break;
 	case WM_COMMAND:
 		switch (LOWORD(wParam))
 		{
+			
+		case ID_PLAY_PLAYBEGIN:
+			SetTimer(hWnd, 1,(int)(sqrt(double(cx*cx+cy*cy))/mod)*10, NULL);
+			xt = x;
+			yt = y;
+			InvalidateRect(hWnd, NULL, TRUE);
+			break;
+		case ID_PLAY_PLAYEND:
+			KillTimer(hWnd,1);
+			x = cx - 16;
+			y = cy - 16;
+			InvalidateRect(hWnd, NULL, TRUE);
+			play = false;
+			break;
 		case IDM_EXIT: DestroyWindow(hWnd); break;
 		default: return DefWindowProc(hWnd, message, wParam, lParam);
 		}
 		break;
-	case WM_LBUTTONDOWN:
-		x = LOWORD(lParam);
-		y = HIWORD(lParam);
-		for (k = 0; k < 3; k++) {
-			p = x - pts[k].x;
-			q = y - pts[k].y;
-			if (p*p + q * q < 16)
-			{
-				SetCapture(hWnd);
-				Capture = true;
-				return 0;
-			}
-		}
-		break;
-	case WM_MOUSEMOVE:
-		if (Capture)
-		{
-			pts[k].x = LOWORD(lParam);
-			pts[k].y = HIWORD(lParam);
-			InvalidateRect(hWnd, NULL, TRUE);
-		}
-		break;
-	case WM_LBUTTONUP:
-		if (Capture)
-		{
-			ReleaseCapture();
-			Capture = false;
-		}
-		break;
 	case WM_PAINT:
 		hdc = BeginPaint(hWnd, &ps);
-		PlgBlt(hdc, pts, memDC, 0, 0, bm.bmWidth, bm.bmHeight, 0, 0, 0);
-		SelectObject(hdc, (HPEN)hPen);
-		for (i = 0; i < 3; i++)
-			Ellipse(hdc, pts[i].x - 4, pts[i].y - 4, pts[i].x + 4, pts[i].y + 4);
+		BitBlt(hdc, x, y, 32, 32, memDC, 0, 0, SRCCOPY);
 		EndPaint(hWnd, &ps);
 		break;
 	case WM_DESTROY:
 		DeleteDC(memDC);
-		DeleteObject(hPen);
+		DeleteObject(hpen);
 		PostQuitMessage(0); 
 		break;
 	default: return DefWindowProc(hWnd, message, wParam, lParam);
